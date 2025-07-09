@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GL Summary Input Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f9f9f9;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+    }
+    #summary {
+      margin-top: 20px;
+      background: #eef;
+      padding: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>GL Entry Input</h2>
+  <table id="glTable">
+    <thead>
+      <tr>
+        <th>GL</th>
+        <th>Invoice Amount</th>
+        <th>Area</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <select>
+            <option value="">Select GL</option>
+            <option>Management Fee & platform fee</option>
+            <option>Housekeeping & Supplies Fees</option>
+            <option>OTA & host fees</option>
+            <option>Total Revenue</option>
+          </select>
+        </td>
+        <td><input type="number" name="invoice" step="0.01"></td>
+        <td><input type="text" name="area"></td>
+      </tr>
+    </tbody>
+  </table>
+  <button onclick="addRow()">Add Row</button>
+  <button onclick="generateSummary()">Generate Summary</button>
+
+  <div id="summary"></div>
+
+  <script>
+    function addRow() {
+      const table = document.getElementById("glTable").getElementsByTagName('tbody')[0];
+      const newRow = table.insertRow();
+
+      const glCell = newRow.insertCell();
+      const glSelect = document.createElement("select");
+      glSelect.innerHTML = `
+        <option value="">Select GL</option>
+        <option>Management Fee & platform fee</option>
+        <option>Housekeeping & Supplies Fees</option>
+        <option>OTA & host fees</option>
+        <option>Total Revenue</option>
+      `;
+      glCell.appendChild(glSelect);
+
+      const invoiceCell = newRow.insertCell();
+      const invoiceInput = document.createElement("input");
+      invoiceInput.type = "number";
+      invoiceInput.step = "0.01";
+      invoiceCell.appendChild(invoiceInput);
+
+      const areaCell = newRow.insertCell();
+      const areaInput = document.createElement("input");
+      areaInput.type = "text";
+      areaCell.appendChild(areaInput);
+    }
+
+    function generateSummary() {
+      const rows = document.getElementById("glTable").getElementsByTagName('tbody')[0].rows;
+      let summaryData = {};
+
+      for (let row of rows) {
+        const gl = row.cells[0].querySelector('select').value.trim();
+        const invoice = parseFloat(row.cells[1].querySelector('input').value) || 0;
+        const area = row.cells[2].querySelector('input').value.trim();
+
+        if (!gl) continue;
+
+        if (!summaryData[gl]) {
+          summaryData[gl] = { total: 0, areas: new Set() };
+        }
+
+        summaryData[gl].total += invoice;
+        summaryData[gl].areas.add(area);
+      }
+
+      let summaryHTML = "<h3>Summary by GL</h3><ul>";
+      for (let gl in summaryData) {
+        const glData = summaryData[gl];
+        const areaList = Array.from(glData.areas).filter(a => a).join(", ");
+        summaryHTML += `<li><strong>${gl}</strong>: $${glData.total.toFixed(2)}<br><em>Areas:</em> ${areaList}</li>`;
+      }
+      summaryHTML += "</ul>";
+
+      document.getElementById("summary").innerHTML = summaryHTML;
+    }
+  </script>
+</body>
+</html>
